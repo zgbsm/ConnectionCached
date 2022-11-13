@@ -19,14 +19,16 @@ def invoke_pocs(fn: str, is_url: bool, target: str):
         return
     if poc_obj.check():
         if poc_obj.exploit():
+            exts = ['markdown.extensions.extra', 'markdown.extensions.codehilite', 'markdown.extensions.tables',
+                    'markdown.extensions.toc']
             f = open("template.html", encoding="utf-8")
             temp = f.read()
             f.close()
             temp = temp.replace("{{name}}", poc_obj.name)
             temp = temp.replace("{{severity}}", poc_obj.severity)
             temp = temp.replace("{{target}}", poc_obj.target)
-            temp = temp.replace("{{detail}}", markdown.markdown(poc_obj.detail))
-            f = open("reports/{}_{}_{}.html".format(poc_obj.severity, poc_obj.name, uuid.uuid4()), "w")
+            temp = temp.replace("{{detail}}", markdown.markdown(poc_obj.detail, extensions=exts))
+            f = open("reports/{}_{}_{}.html".format(poc_obj.severity, poc_obj.name, uuid.uuid4()), "w", encoding="utf-8")
             f.write(temp)
             f.close()
 
