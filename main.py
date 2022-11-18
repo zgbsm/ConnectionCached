@@ -1,9 +1,16 @@
 import importlib
 import os
+import threading
 import uuid
 from PocUtils import PocType
 import markdown
 from alive_progress import alive_bar
+from queue import Queue
+import urllib3
+
+urllib3.disable_warnings()
+url_queue = Queue()
+ip_queue = Queue()
 
 
 def invoke_pocs(fn: str, is_url: bool, target: str):
@@ -36,6 +43,25 @@ def invoke_pocs(fn: str, is_url: bool, target: str):
         pass
 
 
+def worker(poc_list: list, is_url: bool, p_bar):
+    while True:
+        target = ''
+        try:
+            if is_url:
+                target = url_queue.get(block=False)
+            else:
+                target = ip_queue.get(block=False)
+        except Exception:
+            pass
+        if target == '':
+            return
+        target = target.replace("\r", "")
+        target = target.replace("\n", "")
+        for index in poc_list:
+            invoke_pocs(index, is_url, target)
+        p_bar()
+
+
 if __name__ == "__main__":
     targets = open("urls.txt")
     urls = targets.readlines()
@@ -44,17 +70,20 @@ if __name__ == "__main__":
     ips = targets.readlines()
     targets.close()
     pocs = os.listdir("pocs")
+    for i in urls:
+        url_queue.put(i)
+    for i in ips:
+        ip_queue.put(i)
+    thread_pool = []
     with alive_bar(len(urls) + len(ips)) as bar:
-        for i in urls:
-            t = i.replace("\r", "")
-            t = t.replace("\n", "")
-            for j in pocs:
-                invoke_pocs(j, True, t)
-            bar()
-        for i in ips:
-            t = i.replace("\r", "")
-            t = t.replace("\n", "")
-            for j in pocs:
-                invoke_pocs(j, False, t)
-            bar()
+        for i in range(50):
+            thread = threading.Thread(target=worker, args=[pocs, True, bar])
+            thread.start()
+            thread_pool.append(thread)
+        for i in range(50):
+            thread = threading.Thread(target=worker, args=[pocs, False, bar])
+            thread.start()
+            thread_pool.append(thread)
+        for i in thread_pool:
+            i.join()
     print("done")

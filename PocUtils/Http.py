@@ -1,8 +1,11 @@
+import threading
 import requests
 
 
 class Http:
     cache = []
+    lock = threading.Lock()
+    timeout = (60, 240)
 
     def __init__(self):
         self.url = ""
@@ -24,17 +27,22 @@ class Http:
         return ue and qe and he and ce and de and me and je
 
     def check_cache(self) -> int:
+        Http.lock.acquire()
         index = 0
         for i in Http.cache:
             if i[0] == self:
+                Http.lock.release()
                 return index
             index += 1
+        Http.lock.release()
         return -1
 
     def save_cache(self, resp: requests.Response):
+        Http.lock.acquire()
         if len(Http.cache) > 99:
             del Http.cache[0]
         Http.cache.append((self, resp))
+        Http.lock.release()
 
     def get(self) -> requests.Response:
         self.method = "GET"
@@ -56,15 +64,15 @@ class Http:
         match self.method:
             case "GET":
                 resp = requests.get(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
-                                    data=self.data, verify=False)
+                                    data=self.data, verify=False, timeout=Http.timeout)
             case "POST":
                 resp = requests.post(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
-                                     data=self.data, verify=False)
+                                     data=self.data, verify=False, timeout=Http.timeout)
             case "JSONPOST":
                 resp = requests.post(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
-                                     json=self.json)
+                                     json=self.json, verify=False, timeout=Http.timeout)
             case other:
                 resp = requests.get(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
-                                    data=self.data, verify=False)
+                                    data=self.data, verify=False, timeout=Http.timeout)
         self.save_cache(resp)
         return resp

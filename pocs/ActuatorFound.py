@@ -20,7 +20,7 @@ class Poc:
         client = Http()
         client.url = urljoin(self.target, "/actuator/info")
         resp = client.get()
-        if resp.status_code == 200:
+        if resp.status_code == 200 and "json" in resp.headers.get("Content-Type"):
             return True
         else:
             return False
