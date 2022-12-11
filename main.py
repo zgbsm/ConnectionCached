@@ -1,7 +1,10 @@
 import importlib
 import os
+import socket
 import threading
 import uuid
+import socks
+import yaml
 from PocUtils import PocType
 import markdown
 from alive_progress import alive_bar
@@ -70,6 +73,13 @@ if __name__ == "__main__":
     ips = targets.readlines()
     targets.close()
     pocs = os.listdir("pocs")
+    proxy = open("proxy.yaml")
+    socks_proxy = proxy.read()
+    proxy.close()
+    socks_conf = yaml.load(socks_proxy, yaml.SafeLoader)
+    if socks_conf["socks5"]["host"] != "":
+        socks.set_default_proxy(socks.SOCKS5, socks_conf["socks5"]["host"], socks_conf["socks5"]["port"])
+        socket.socket = socks.socksocket
     for i in urls:
         url_queue.put(i)
     for i in ips:

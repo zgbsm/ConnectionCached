@@ -3,3 +3,4 @@ Markdown~=3.4.1
 alive-progress~=2.4.1
 urllib3~=1.26.12
 PyYAML~=6.0
+PySocks~=1.7.1

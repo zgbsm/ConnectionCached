@@ -56,6 +56,10 @@ class Http:
         self.method = "JSONPOST"
         return self.do_request()
 
+    def put(self) -> requests.Response:
+        self.method = "PUT"
+        return self.do_request()
+
     def do_request(self) -> requests.Response:
         index = self.check_cache()
         if index != -1:
@@ -71,6 +75,9 @@ class Http:
             case "JSONPOST":
                 resp = requests.post(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
                                      json=self.json, verify=False, timeout=Http.timeout)
+            case "PUT":
+                resp = requests.put(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
+                                    data=self.data, verify=False, timeout=Http.timeout)
             case other:
                 resp = requests.get(url=self.url, params=self.queries, headers=self.headers, cookies=self.cookies,
                                     data=self.data, verify=False, timeout=Http.timeout)
