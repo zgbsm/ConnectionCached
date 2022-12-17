@@ -15,7 +15,7 @@ class Poc:
         client = Http()
         client.url = self.target
         resp = client.get()
-        if "小米路由器" in resp.text:
+        if "小米路由器" in resp.content.decode(encoding='utf-8'):
             return True
         else:
             return False
